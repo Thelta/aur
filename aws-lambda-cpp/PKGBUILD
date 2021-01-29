@@ -1,0 +1,37 @@
+_pkgname=aws-lambda-cpp
+pkgname=aws-lambda-cpp-custom
+pkgver=v0.2.6
+pkgrel=1
+pkgdesc="C++ implementation of the AWS Lambda runtime"
+url="https://github.com/awslabs/aws-lambda-cpp"
+license=(Apache-2.0)
+arch=(x86_64)
+makedepends=(cmake git)
+provides=("$_pkgname")
+source=("git+$url#tag=$pkgver")
+sha256sums=('SKIP')
+
+_cmake_flags=(
+  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_INSTALL_PREFIX=/usr
+)
+
+build() {
+  mkdir -p build
+  cd build
+  cmake ../$_pkgname "${_cmake_flags[@]}"
+  make
+}
+
+# check() {
+#   cd build
+#   cmake ../$pkgname "${_cmake_flags[@]}" -DBUILD_TESTING=ON
+#   make
+#   ctest --output-on-failure
+# }
+
+package() {
+  cd build
+  make "DESTDIR=$pkgdir" install
+  install -Dm644 "-t$pkgdir/usr/share/licenses/$_name" ../$_pkgname/LICENSE
+}

@@ -1,0 +1,65 @@
+# Maintainer: Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
+# Contributor: Aleksey Filippov <sarum9in@gmail.com>
+# Contributor: Victor Aurélio Santos <victoraur.santos@gmail.com>
+
+pkgbase='grpc'
+pkgname=('grpc-custom')
+pkgver=1.33.2
+_gtestver=c9ccac7cb7345901884aabf5d1a786cfa6e2f397
+pkgrel=1
+pkgdesc="High performance, open source, general RPC framework that puts mobile and HTTP/2 first."
+arch=('x86_64')
+url='https://grpc.io'
+license=('BSD')
+makedepends=('re2c' 'protobuf' 'php' 'c-ares' 'openssl' 'chrpath' 'gflags' 'cython' 'cmake' 'benchmark' 'abseil-cpp-custom')
+source=("https://github.com/grpc/grpc/archive/v$pkgver/$pkgbase-$pkgver.tar.gz"
+        "https://github.com/google/googletest/archive/$_gtestver/googletest-$_gtestver.tar.gz")
+sha256sums=('SKIP'
+            'SKIP')
+
+prepare() {
+  cd "$srcdir/$pkgbase-$pkgver"
+#  ln -sf "$srcdir/googletest-$_gtestver/"{googlemock,googletest} \
+#    third_party/googletest
+
+#  rm -rf third_party/abseil-cpp
+#  ln -s "$srcdir/abseil-cpp-$_abseilcppver/" third_party/abseil-cpp
+
+#  sed '/TARGET gflags::gflags/i \  set(_gRPC_GFLAGS_LIBRARIES gflags)' -i cmake/gflags.cmake
+
+  mkdir build
+}
+
+build() {
+  cd "$srcdir/$pkgbase-$pkgver/build"
+  cmake \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_CXX_FLAGS="${CXXFLAGS} -DNDEBUG" \
+    -DCMAKE_CXX_STANDARD=17 \
+    -DgRPC_INSTALL=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DgRPC_CARES_PROVIDER=package \
+    -DgRPC_PROTOBUF_PROVIDER=package \
+    -DgRPC_SSL_PROVIDER=package \
+    -DgRPC_ZLIB_PROVIDER=package \
+    -DgRPC_GFLAGS_PROVIDER=package \
+    -DgRPC_BENCHMARK_PROVIDER=package \
+    -DgRPC_ABSL_PROVIDER=package \
+    -DgRPC_RE2_PROVIDER=package \
+    ..
+
+  make
+  export LDFLAGS="$LDFLAGS -L$PWD"
+}
+
+package_grpc-custom() {
+  depends=('c-ares' 'protobuf' 'openssl' 'benchmark' 'abseil-cpp-custom')
+  provides=('grpc')
+  conflicts=('grpc')
+
+  cd "$srcdir/$pkgbase-$pkgver/build"
+  make DESTDIR="$pkgdir" install
+  install -Dm644 ../LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

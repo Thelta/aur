@@ -1,0 +1,39 @@
+# Maintainer: Guillaume Horel <guillaume.horel@gmail.com>
+# Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributor: Jeff Mickey <jeff@archlinux.org>
+# Contributor: Alexander Fehr <pizzapunk gmail com>
+
+pkgname=c-ares-cmake-custom
+_pkgname=c-ares
+pkgver=1.16.1
+pkgrel=1
+pkgdesc='C library that performs DNS requests and name resolves asynchronously (with cmake build files)'
+arch=('x86_64')
+url='https://c-ares.haxx.se/'
+license=('custom')
+depends=('glibc')
+makedepends=('cmake')
+source=("https://c-ares.haxx.se/download/$_pkgname-$pkgver.tar.gz"
+        'LICENSE')
+sha512sums=('SKIP'
+	    'SKIP')
+provides=('c-ares')
+conflicts=('c-ares' 'c-ares-cmake')
+
+build() {
+  cd "$_pkgname-$pkgver"
+
+  mkdir -p build; cd build
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBDIR=/usr/lib \
+        ..
+  make
+}
+
+package() {
+  cd "$_pkgname-$pkgver/build"
+
+  make DESTDIR="$pkgdir" install
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$_pkgname/LICENSE"
+}
