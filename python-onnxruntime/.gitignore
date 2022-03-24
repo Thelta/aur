@@ -1,0 +1,8 @@
+cxxopts
+dlpack
+onnx
+onnx-tensorrt
+onnxruntime
+pytorch_cpuinfo
+SafeInt
+tensorboard
