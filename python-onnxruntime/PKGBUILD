@@ -4,9 +4,9 @@ pkgbase=python-onnxruntime
 # Not split DNNL EP to another package as it's needed unconditionally at runtime if built at compile time
 # https://github.com/microsoft/onnxruntime/blob/v1.9.1/onnxruntime/python/onnxruntime_pybind_state.cc#L533
 pkgname=(python-onnxruntime python-onnxruntime-cuda python-onnxruntime-tensorrt)
-pkgver=1.10.0
+pkgver=1.11.0
 pkgdesc='Cross-platform, high performance scoring engine for ML models'
-pkgrel=4
+pkgrel=1
 arch=(x86_64)
 url='https://github.com/microsoft/onnxruntime'
 license=(MIT)
@@ -105,6 +105,7 @@ build() {
   )
 
   cmake_args+=(
+    -DCMAKE_CUDA_FLAGS="-t0"
     -DCMAKE_CUDA_ARCHITECTURES="$_CUDA_ARCHITECTURES"
     -DCMAKE_CUDA_STANDARD_REQUIRED=ON
     -DCMAKE_CXX_STANDARD_REQUIRED=ON
@@ -119,10 +120,10 @@ build() {
     -DCUDA_TOOLKIT_ROOT_DIR=/opt/cuda/
   )
 
-  cmake -B build -S cmake "${cmake_args[@]}" "$@"
+  cmake -GNinja -B build -S cmake "${cmake_args[@]}" "$@"
 
   cd build
-  cmake --build . --parallel $(nproc)
+  cmake --build .
   python ../setup.py build
 }
 
@@ -144,6 +145,9 @@ package_python-onnxruntime() {
   # installed as split packages
   rm -vf "$pkgdir"/usr/lib/libonnxruntime_providers_cuda.so
   rm -vf "$pkgdir"/usr/lib/libonnxruntime_providers_tensorrt.so
+
+  rm -vf "$pkgdir"/usr/lib/libnvonnxparser.so*
+  rm -vf "$pkgdir"/usr/lib/libnvonnxparser_static.a
 }
 
 package_python-onnxruntime-cuda() {
