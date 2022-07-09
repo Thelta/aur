@@ -1,8 +1,3 @@
-cxxopts
-dlpack
-onnx
-onnx-tensorrt
-onnxruntime
-pytorch_cpuinfo
-SafeInt
-tensorboard
+!build-fixes.patch
+!install-orttraining-files.diff
+!system-dnnl.diff

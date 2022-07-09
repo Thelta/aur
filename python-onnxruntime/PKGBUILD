@@ -1,12 +1,13 @@
 # Maintainer: Chih-Hsuan Yen <yan12125@gmail.com>
+# Contributer: Atilhan Emre DURSUNOGLU <atilhandursunoglu@outlook.com>
 
 pkgbase=python-onnxruntime
 # Not split DNNL EP to another package as it's needed unconditionally at runtime if built at compile time
 # https://github.com/microsoft/onnxruntime/blob/v1.9.1/onnxruntime/python/onnxruntime_pybind_state.cc#L533
 pkgname=(python-onnxruntime python-onnxruntime-cuda python-onnxruntime-tensorrt)
-pkgver=1.11.0
+pkgver=1.11.1
 pkgdesc='Cross-platform, high performance scoring engine for ML models'
-pkgrel=1
+pkgrel=2
 arch=(x86_64)
 url='https://github.com/microsoft/onnxruntime'
 license=(MIT)
@@ -70,15 +71,17 @@ prepare() {
     git submodule update cmake/external/$mod
   done
 
-  pushd cmake/external/onnx-tensorrt
-  git checkout b4a7461e73905e50c6741e27fe8d209496f3983f
-  popd
+  # Protobuf 3.20 incompatibility https://github.com/microsoft/onnxruntime/pull/11639
+  git cherry-pick -n 6aa286f1e3ece96a7326ea55fdcd225f1ff8bbf2
+  # Fix building DNNL EP with GCC 12 https://github.com/microsoft/onnxruntime/pull/11667
+  git cherry-pick -n 59ca05cb1c1de0492d10ac895904b217c86e612d
 
   cd onnxruntime/core/flatbuffers/schema
   python compile_schema.py --flatc /usr/bin/flatc
 }
 
 build() {
+  export CUDAHOSTCXX=/usr/bin/g++-11
   cd "$srcdir"/onnxruntime
 
   local cmake_args=(
@@ -105,7 +108,6 @@ build() {
   )
 
   cmake_args+=(
-    -DCMAKE_CUDA_FLAGS="-t0"
     -DCMAKE_CUDA_ARCHITECTURES="$_CUDA_ARCHITECTURES"
     -DCMAKE_CUDA_STANDARD_REQUIRED=ON
     -DCMAKE_CXX_STANDARD_REQUIRED=ON
