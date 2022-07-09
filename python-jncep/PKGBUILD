@@ -1,0 +1,16 @@
+pkgname=python-jncep
+pkgver=37
+pkgrel=1
+pkgdesc="Simple command-line tool to generate EPUB files for J-Novel Club pre-pub novels"
+arch=('any')
+url="https://github.com/gvellut/jncep"
+license=('MIT')
+makedepends=('python' 'python-setuptools')
+depends=('python-ebooklib' 'python-addict' 'python-attrs' 'python-click' 'python-atomicwrites' 'python-dateutil' 'python-asks' 'python-trio' 'python-rich' 'python-outcome' 'python-importlib_resources')
+source=("git+$url#tag=v$pkgver")
+sha512sums=('SKIP')
+
+package() {  
+  cd "${srcdir}/jncep"
+  python setup.py install --root="$pkgdir/" --optimize=1
+}
