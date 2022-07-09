@@ -1,5 +1,4 @@
-**/src/
-**/pkg/
-**/*.pkg.tar.zst
-**/.git
-**/.SRCINFO
+**/*/*
+!**/PKGBUILD
+!.*/**/*
+tensorrt/
