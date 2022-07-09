@@ -6,43 +6,45 @@
 # Contributor: Thomas S Hatch <thatch45@gmail.com>
 # Contributor: Geoffroy Carrier <geoffroy@archlinux.org>
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
+# Contributer: Atilhan Emre DURSUNOGLU <atilhandursunoglu@outlook.com>
 
-_pkgname=protobuf
-pkgname=('protobuf-static')
-pkgver=3.19.4
-pkgrel=2
+
+pkgname='protobuf-static'
+_pkgbase='protobuf'
+pkgver=21.2
+pkgrel=1
 pkgdesc="Protocol Buffers - Google's data interchange format"
 arch=('x86_64')
 url='https://developers.google.com/protocol-buffers/'
 license=('BSD')
 depends=('gcc-libs' 'glibc' 'zlib')
-makedepends=('unzip' 'python-setuptools')
-source=("https://github.com/protocolbuffers/$_pkgname/releases/download/v$pkgver/$_pkgname-all-$pkgver.tar.gz")
-sha512sums=('0d9f4ad25b8d932ff6c19c6db0fa452eb028bcc7ea428db0868c01e7e521f75f6d9516f7688166a95e3241d8c5209bc012b3a221276aab9f11f2afb743beb9ae')
-
-prepare() {
-  cd "$_pkgname-$pkgver"
-  autoreconf -vfi
-
-# Don't fail tests on deprecation warnings
-  sed -e "/DeprecationWarning/d" -i python/google/protobuf/internal/*test.py
-}
+makedepends=('python-setuptools' 'cmake' 'gtest' 'ninja' 'mold')
+source=(https://github.com/protocolbuffers/protobuf/archive/v$pkgver/$_pkgbase-$pkgver.tar.gz)
+sha512sums=('7f98cd6a57795c80c619f40d85010fac66daad67fa78c82ce4439a6f882c8f1cccd05e2c2d7851b30c7753d657d9738415cb462ea9dd02fb87a5b6011f234e37')
 
 build() {
-  cd "$_pkgname-$pkgver"
-  ./configure --prefix=/usr
-  make -j12 CFLAGS="$CFLAGS -fPIC" CXXFLAGS="$CXXFLAGS -fPIC"
+  cmake -B build -S $_pkgbase-$pkgver \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -Dprotobuf_USE_EXTERNAL_GTEST=ON \
+    -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+    -DCMAKE_LINKER=/usr/bin/mold \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -G Ninja
+
+  cmake --build build
+
+  ln -rs build $_pkgbase-$pkgver/src/.libs
 }
 
-package_protobuf-static() {
+package() {
   replaces=('protobuf-cpp')
-  provides=('libprotobuf.a' 'libprotobuf-lite.a')
+  provides=('libprotoc.a' 'libprotobuf.a' 'libprotobuf-lite.a')
 
-  cd "$_pkgname-$pkgver"
-  pushd "src/.libs"
-  install -vDm 644 libprotobuf.a -t "$pkgdir"/usr/lib/
-  install -vDm 644 libprotobuf-lite.a -t "$pkgdir"/usr/lib/
-  popd
+  DESTDIR="$pkgdir" cmake --install build
 
-  install -vDm 644 LICENSE -t "$pkgdir/usr/share/licenses/$pkgname"
+  cd $pkgdir
+  rm -rf ./usr/include
+  rm -rf ./usr/bin
+  rm -rf ./usr/lib/pkgconfig
+  rm -rf ./usr/lib/cmake
 }
